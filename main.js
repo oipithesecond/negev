@@ -11,4 +11,4 @@ client.on("message", message => {
 });
 
 
-client.login("ODk0NjE0ODgwODc3OTQ4OTY4.YVslCA.fL8ac9VYKY1KY7kGdgPshXzp1_k")
+client.login("sample token")
