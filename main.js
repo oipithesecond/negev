@@ -1,4 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
+const { ChannelType } = require('discord.js');
+const { ActivityType } = require('discord.js');
 require('dotenv').config();
 
 const client = new Client({
@@ -6,12 +8,12 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
     ],
 });
 
 const TOKEN = process.env.DISCORD_TOKEN;
 
-// Configuration for game-specific thresholds and messages
 const GAME_THRESHOLDS = {
     "Minecraft": [
         { duration: 2 * 60 * 1000, message: "You've been crafting for 30 minutes in Minecraft! Take a moment to hydrate." },
@@ -34,66 +36,103 @@ client.once('ready', () => {
     console.log(`${client.user.tag} is online!`);
 });
 
+client.on("messageCreate", message => {
+    if (message.content === "negev") {
+        message.channel.send("based");
+    }
+})
+
 client.on('presenceUpdate', (oldPresence, newPresence) => {
     const user = newPresence.user;
     const activities = newPresence.activities;
 
     if (activities && activities.length > 0) {
+        console.log("Activities Detected:", activities.map(a => a.name));
         // Check for playing activity
-        const playingActivity = activities.find(activity => activity.type === 'PLAYING');
+        const playingActivity = activities.find(activity => 
+            activity.type === 0 || activity.name);
+        if (!playingActivity) {
+            console.log("No 'PLAYING' activity detected!");
+        }
 
         if (playingActivity) {
             const currentTime = Date.now();
             const gameName = playingActivity.name;
 
-            // Get the thresholds for the current game or use the default
             const thresholds = GAME_THRESHOLDS[gameName] || GAME_THRESHOLDS["Default"];
 
-            // Check if the user is already being tracked
             if (userActivityMap.has(user.id)) {
+                console.log("User is being tracked:", userActivityMap.get(user.id));
                 const { trackedGame, startTime, notifiedThresholds } = userActivityMap.get(user.id);
 
                 if (trackedGame === gameName) {
                     const elapsedTime = currentTime - startTime;
+                    console.log(`Elapsed time for ${gameName}: ${elapsedTime} ms`);
 
-                    // Check thresholds
                     for (const threshold of thresholds) {
                         if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
                             const channel = newPresence.guild.channels.cache.find(
                                 ch => ch.type === 0 && ch.permissionsFor(client.user).has('SEND_MESSAGES')
                             );
                             if (channel) {
+                                console.log(`Channel found: ${channel.name}`);
                                 channel.send(`${user.username}, ${threshold.message}`);
+                            }else{
+                                console.log("No valid text channel found!");
                             }
 
-                            // Mark this threshold as notified
                             notifiedThresholds.push(threshold.duration);
                         }
                     }
                 } else {
-                    // If the user switches games, reset tracking
                     userActivityMap.set(user.id, { 
                         trackedGame: gameName, 
                         startTime: currentTime, 
                         notifiedThresholds: [] 
                     });
+                    console.log(`Game switched for ${user.username}: ${trackedGame} -> ${gameName}`);
                 }
             } else {
-                // Start tracking the new activity
                 userActivityMap.set(user.id, { 
                     trackedGame: gameName, 
                     startTime: currentTime, 
                     notifiedThresholds: [] 
                 });
+                console.log(`Tracking initialized for ${user.username}: ${gameName}`);
             }
         } else {
-            // If the user stops playing, remove them from tracking
             userActivityMap.delete(user.id);
         }
     } else {
-        // Remove user from tracking if no activity is detected
+        console.log("No activities detected for user:", newPresence.user.username);
         userActivityMap.delete(user.id);
     }
 });
+
+setInterval(() => {
+    const currentTime = Date.now();
+    userActivityMap.forEach((value, userId) => {
+        const { trackedGame, startTime, notifiedThresholds } = value;
+        const elapsedTime = currentTime - startTime;
+        console.log(`Checking elapsed time for ${userId}: ${elapsedTime} ms`);
+
+        const thresholds = GAME_THRESHOLDS[trackedGame] || GAME_THRESHOLDS["Default"];
+        thresholds.forEach(threshold => {
+            if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
+                const user = client.users.cache.get(userId);
+                if (user) {
+                    console.log(`Sending message to ${user.username}`);
+                    const channel = client.channels.cache.find(
+                        ch => ch.type === ChannelType.GuildText && ch.permissionsFor(client.user).has('SEND_MESSAGES')
+                    );
+                    if (channel) {
+                        channel.send(`${user.username}, ${threshold.message}`);
+                        notifiedThresholds.push(threshold.duration);
+                    }
+                }
+            }
+        });
+    });
+}, 60 * 1000); // Check every minute
 
 client.login(TOKEN);
