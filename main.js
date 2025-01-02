@@ -1,6 +1,6 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-const { ChannelType } = require('discord.js');
-const { ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, ChannelType, ActivityType } = require('discord.js');
+const { registerSlashCommands } = require('./slash-deploy');
+const GAME_THRESHOLDS = require('./gameThresholds');
 require('dotenv').config();
 
 const client = new Client({
@@ -13,23 +13,8 @@ const client = new Client({
 });
 
 const TOKEN = process.env.DISCORD_TOKEN;
-
-const GAME_THRESHOLDS = {
-    "Minecraft": [
-        { duration: 2 * 60 * 1000, message: "You've been crafting for 30 minutes in Minecraft! Take a moment to hydrate." },
-        { duration: 5 * 60 * 1000, message: "You've been mining for an hour in Minecraft! Consider a quick break." }
-    ],
-    "Valorant": [
-        { duration: 2 * 60 * 1000, message: "You've been in intense matches for 45 minutes in Valorant! Maybe stretch a bit." },
-        { duration: 5 * 60 * 1000, message: "You've been in the zone for 1.5 hours in Valorant! Take a breather." }
-    ],
-    "Default": [
-        { duration: 2 * 60 * 1000, message: "You've been playing for 30 minutes! Remember to stretch and hydrate." },
-        { duration: 5 * 60 * 1000, message: "You've been gaming for 1 hour! Consider taking a short break." }
-    ]   
-};
-
 const userActivityMap = new Map();
+const guildAlertChannels = new Map();
 
 client.once('ready', () => {
     console.log(`${client.user.tag} is online!`);
@@ -112,7 +97,8 @@ setInterval(() => {
     userActivityMap.forEach((value, userId) => {
         const { trackedGame, startTime, notifiedThresholds } = value;
         const elapsedTime = currentTime - startTime;
-        console.log(`Checking elapsed time for ${userId}: ${elapsedTime} ms`);
+        const user = client.users.cache.get(userId)
+        console.log(`Checking elapsed time for ${user.username}: ${elapsedTime} ms`);
 
         const thresholds = GAME_THRESHOLDS[trackedGame] || GAME_THRESHOLDS["Default"];
         thresholds.forEach(threshold => {
@@ -133,4 +119,19 @@ setInterval(() => {
     });
 }, 60 * 1000);
 
+client.on("interactionCreate", async (interaction) => {
+    if (interaction.isCommand()) {
+        if (interaction.commandName === "ping") {
+            await interaction.reply("pong");
+        } else if (interaction.commandName === "alerts-channel") {
+            const channel = interaction.options.getChannel("channel");
+            if (channel.type === ChannelType.GuildText) {
+                alertsChannelId = channel.id;
+                await interaction.reply(`Alerts will now be sent to <#${channel.id}>.`);
+            } else {
+                await interaction.reply("Please specify a valid text channel.");
+            }
+        }
+    }
+});
 client.login(TOKEN);
