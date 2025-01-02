@@ -29,7 +29,6 @@ const GAME_THRESHOLDS = {
     ]   
 };
 
-// Store user activity data
 const userActivityMap = new Map();
 
 client.once('ready', () => {
@@ -48,9 +47,8 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
 
     if (activities && activities.length > 0) {
         console.log("Activities Detected:", activities.map(a => a.name));
-        // Check for playing activity
         const playingActivity = activities.find(activity => 
-            activity.type === 0 || activity.name);
+            activity.type === ActivityType.Playing || activity.name);
         if (!playingActivity) {
             console.log("No 'PLAYING' activity detected!");
         }
@@ -62,7 +60,6 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
             const thresholds = GAME_THRESHOLDS[gameName] || GAME_THRESHOLDS["Default"];
 
             if (userActivityMap.has(user.id)) {
-                console.log("User is being tracked:", userActivityMap.get(user.id));
                 const { trackedGame, startTime, notifiedThresholds } = userActivityMap.get(user.id);
 
                 if (trackedGame === gameName) {
@@ -72,12 +69,12 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                     for (const threshold of thresholds) {
                         if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
                             const channel = newPresence.guild.channels.cache.find(
-                                ch => ch.type === 0 && ch.permissionsFor(client.user).has('SEND_MESSAGES')
+                                ch => ch.type === ChannelType.GuildText && ch.permissionsFor(client.user).has('SEND_MESSAGES')
                             );
                             if (channel) {
                                 console.log(`Channel found: ${channel.name}`);
                                 channel.send(`${user.username}, ${threshold.message}`);
-                            }else{
+                            } else {
                                 console.log("No valid text channel found!");
                             }
 
@@ -93,6 +90,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                     console.log(`Game switched for ${user.username}: ${trackedGame} -> ${gameName}`);
                 }
             } else {
+                console.log(`Starting new tracking for ${user.username} in game ${gameName}`);
                 userActivityMap.set(user.id, { 
                     trackedGame: gameName, 
                     startTime: currentTime, 
@@ -133,6 +131,6 @@ setInterval(() => {
             }
         });
     });
-}, 60 * 1000); // Check every minute
+}, 60 * 1000);
 
 client.login(TOKEN);
