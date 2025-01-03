@@ -8,7 +8,7 @@ const botToken = process.env.DISCORD_TOKEN
 const rest = new REST().setToken(botToken)
 const slashRegister = async() => {
     try{
-        await rest.put(Routes.applicationGuildCommands(botID, serverID), { //Routes.applicationCommands(botID) for global slash commands
+        await rest.put(Routes.applicationCommands(botID), { 
             body: [
                 new SlashCommandBuilder()
                 .setName("ping")
@@ -33,4 +33,3 @@ const slashRegister = async() => {
 
 slashRegister()
 
-module.exports = { slashRegister }
