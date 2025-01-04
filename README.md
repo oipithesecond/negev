@@ -17,7 +17,7 @@ A Discord bot that tracks user activity via Rich Presence and sends real-time up
 - Send the message `negev` in any text channel where the bot is active to test basic functionality.
 
 ## Bot Permissions
-Ensure your bot has the following permissions:
+Ensure the bot has the following permissions:
 - Manage Channels
 - Send Messages
 - Read Message History
