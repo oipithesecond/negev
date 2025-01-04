@@ -1,6 +1,6 @@
 # Discord Activity Tracker Bot
 
-A Discord bot that tracks user activity via Rich Presence and sends real-time updates to a user-specified channel, keeping your server informed and engaged.
+Negev tracks user activity via Rich Presence and sends real-time updates to a user-specified channel, keeping your server informed and engaged.
 
 ## Features
 - Tracks user activity using Discord's Rich Presence.
