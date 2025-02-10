@@ -14,7 +14,7 @@ Negev tracks user activity via Rich Presence and sends real-time updates to a us
 - `/ping`: Check if the bot is online.
 
 ### Manual Testing
-- Send the message `negev` in any text channel where the bot is active to test basic functionality.
+- Ping the bot in any text channel where the bot is active to test basic functionality.
 
 ## Bot Permissions
 Ensure the bot has the following permissions:
