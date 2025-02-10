@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, ChannelType, ActivityType } = require('discord.js');
-const { Guild } = require('./database');
+const { Guild } = require('./model');
 const GAME_THRESHOLDS = require('./gameThresholds');
 require('dotenv').config();
 
@@ -14,7 +14,6 @@ const client = new Client({
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const userActivityMap = new Map();
-const guildAlertChannels = new Map();
 
 client.once('ready', () => {
     console.log(`${client.user.tag} is online!`);
@@ -22,12 +21,12 @@ client.once('ready', () => {
 });
 
 client.on("messageCreate", message => {
-    if (message.content === "negev") {
-        message.channel.send("based");
+    if (message.content === "@894614880877948968") {
+        message.channel.send("Hi there! Use **/alerts-channel** to set up the bot");
     }
 })
 
-client.on('presenceUpdate', (oldPresence, newPresence) => {
+client.on('presenceUpdate', async (oldPresence, newPresence) => {
     const user = newPresence.user;
     if (user.bot) {
         console.log(`Ignoring bot activity: ${user.username}`);
@@ -58,23 +57,14 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
 
                     for (const threshold of thresholds) {
                         if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
-                                const guildId = newPresence.guild.id;
-                                const channelId = guildAlertChannels.get(guildId);
-                                if (!channelId) {
-                                    console.error(`No alert channel set for guild ${guildId}. Please set one using the /alerts-channel command.`);
-                                    return;
-                                }
-                                if (channelId) {
-                                    const channel = client.channels.cache.get(channelId);
-                                    if (channel) {
-                                        channel.send(`${user.username}, ${threshold.message}`);
-                                    } else {
-                                        console.error(`Could not find alert channel for guild ${guildId}`);
-                                    }
-                                } else {
-                                    console.error(`No alert channel set for guild ${guildId}`);
-                                }
-
+                            const guildId = newPresence.guild.id;
+                            const guildData = await Guild.findOne({ guildId });
+    
+                            if (guildData) {
+                                const channel = client.channels.cache.get(guildData.channelId);
+                                if (channel) channel.send(`${user.username}, ${threshold.message}`);
+                            }
+    
                             notifiedThresholds.push(threshold.duration);
                         }
                     }
@@ -103,6 +93,16 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         userActivityMap.delete(user.id);
     }
 });
+
+async function getGuildAlertChannel(guildId) {
+    try {
+        const guildData = await Guild.findOne({ guildId });
+        return guildData ? guildData.alertChannelId : null;
+    } catch (error) {
+        console.error(`Error fetching guild alert channel: ${error}`);
+        return null;
+    }
+}
 
 setInterval(() => {
     const currentTime = Date.now();
@@ -142,10 +142,13 @@ client.on("interactionCreate", async (interaction) => {
         } else if (interaction.commandName === "alerts-channel") {
             const channel = interaction.options.getChannel("channel");
             if (channel.type === ChannelType.GuildText) {
-                guildAlertChannels.set(interaction.guild.id, channel.id);
+                await Guild.findOneAndUpdate(
+                    { guildId: interaction.guild.id },
+                    { channelId: channel.id },
+                    { upsert: true, new: true }
+                );
                 await interaction.reply(`Alerts will now be sent to <#${channel.id}>.`);
                 console.log(`Alert channel set for guild ${interaction.guild.id}: <#${channel.id}>`);
-
             } else {
                 await interaction.reply("Please specify a valid text channel.");
             }
