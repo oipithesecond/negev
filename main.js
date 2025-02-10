@@ -1,4 +1,5 @@
 const { Client, GatewayIntentBits, ChannelType, ActivityType } = require('discord.js');
+const { Guild } = require('./database');
 const GAME_THRESHOLDS = require('./gameThresholds');
 require('dotenv').config();
 
@@ -17,6 +18,7 @@ const guildAlertChannels = new Map();
 
 client.once('ready', () => {
     console.log(`${client.user.tag} is online!`);
+    console.log("Guilds:", client.guilds.cache.map(g => `${g.name} (${g.id})`).join(", "));
 });
 
 client.on("messageCreate", message => {
@@ -27,6 +29,10 @@ client.on("messageCreate", message => {
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
     const user = newPresence.user;
+    if (user.bot) {
+        console.log(`Ignoring bot activity: ${user.username}`);
+        return;
+    }
     const activities = newPresence.activities;
 
     if (activities && activities.length > 0) {
@@ -54,6 +60,10 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                         if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
                                 const guildId = newPresence.guild.id;
                                 const channelId = guildAlertChannels.get(guildId);
+                                if (!channelId) {
+                                    console.error(`No alert channel set for guild ${guildId}. Please set one using the /alerts-channel command.`);
+                                    return;
+                                }
                                 if (channelId) {
                                     const channel = client.channels.cache.get(channelId);
                                     if (channel) {
@@ -128,7 +138,7 @@ setInterval(() => {
 client.on("interactionCreate", async (interaction) => {
     if (interaction.isCommand()) {
         if (interaction.commandName === "ping") {
-            await interaction.reply("pong");
+            await interaction.reply(`**Latency:** ${Date.now() - interaction.createdTimestamp}ms`);
         } else if (interaction.commandName === "alerts-channel") {
             const channel = interaction.options.getChannel("channel");
             if (channel.type === ChannelType.GuildText) {
