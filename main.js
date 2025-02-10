@@ -17,7 +17,6 @@ const userActivityMap = new Map();
 
 client.once('ready', () => {
     console.log(`${client.user.tag} is online!`);
-    console.log("Guilds:", client.guilds.cache.map(g => `${g.name} (${g.id})`).join(", "));
 });
 
 client.on("messageCreate", message => {
@@ -62,7 +61,7 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
                             const guildData = await Guild.findOne({ guildId });
     
                             if (guildData) {
-                                const channel = client.channels.cache.get(guildData.channelId);
+                                const channel = await client.channels.fetch(guildData.channelId).catch(() => null);
                                 if (channel) channel.send(`${user.username}, ${threshold.message}`);
                             }
     
@@ -117,7 +116,7 @@ setInterval(() => {
         thresholds.forEach(threshold => {
             if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
                 const guildId = client.guilds.cache.find(g => g.members.cache.has(userId))?.id;
-                const channelId = guildAlertChannels.get(guildId);
+                const channelId = getguildAlertChannels.get(guildId);
 
                 if (channelId) {
                     const channel = client.channels.cache.get(channelId);
