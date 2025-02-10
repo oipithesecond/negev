@@ -104,35 +104,39 @@ async function getGuildAlertChannel(guildId) {
     }
 }
 
-setInterval(() => {
+setInterval(async () => {
     const currentTime = Date.now();
-    userActivityMap.forEach((value, userId) => {
+    for (const [userId, value] of userActivityMap) {
         const { trackedGame, startTime, notifiedThresholds } = value;
         const elapsedTime = currentTime - startTime;
         const user = client.users.cache.get(userId);
+        if (!user) continue;
+
         console.log(`Checking elapsed time for ${user.username}: ${elapsedTime} ms`);
 
         const thresholds = GAME_THRESHOLDS[trackedGame] || GAME_THRESHOLDS["Default"];
-        thresholds.forEach(threshold => {
+        for (const threshold of thresholds) {
             if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
                 const guildId = client.guilds.cache.find(g => g.members.cache.has(userId))?.id;
-                const channelId = getguildAlertChannels.get(guildId);
+                if (!guildId) continue;
 
-                if (channelId) {
-                    const channel = client.channels.cache.get(channelId);
-                    if (channel) {
-                        channel.send(`${user.username}, ${threshold.message}`);
-                        notifiedThresholds.push(threshold.duration);
-                        console.log(`Alert sent to ${user.username} in ${channel.name}`);
-                    } else {
-                        console.error(`Could not find alert channel for guild ${guildId}`);
-                    }
-                } else {
+                const channelId = await getGuildAlertChannel(guildId);
+                if (!channelId) {
                     console.error(`No alert channel set for guild ${guildId}`);
+                    continue;
+                }
+
+                const channel = await client.channels.fetch(channelId).catch(() => null);
+                if (channel) {
+                    channel.send(`${user.username}, ${threshold.message}`);
+                    notifiedThresholds.push(threshold.duration);
+                    console.log(`Alert sent to ${user.username} in ${channel.name}`);
+                } else {
+                    console.error(`Could not find alert channel for guild ${guildId}`);
                 }
             }
-        });
-    });
+        }
+    }
 }, 60 * 1000);
 
 client.on("interactionCreate", async (interaction) => {
