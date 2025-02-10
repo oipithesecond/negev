@@ -21,7 +21,8 @@ client.once('ready', () => {
 });
 
 client.on("messageCreate", message => {
-    if (message.content === "@894614880877948968") {
+    if (message.author.bot) return;
+    if (message.mentions.has(client.user)) {
         message.channel.send("Hi there! Use **/alerts-channel** to set up the bot");
     }
 })
