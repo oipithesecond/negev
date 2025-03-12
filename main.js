@@ -24,6 +24,9 @@ client.on("messageCreate", message => {
     if (message.mentions.has(client.user)) {
         message.channel.send("Hi there! Use **/alerts-channel** to set up the bot");
     }
+    if (message.content.toLowerCase().includes("yomtun")) {
+        message.channel.send("https://media.discordapp.net/attachments/1020047166997266517/1147213123644821565/OzBohIhN.gif?ex=67d30dfa&is=67d1bc7a&hm=f85c4447d3a691672ea24f62373b81076c3cac22405cb1c5c7ffdc921e979ab3&=");
+    }
 })
 
 client.on('presenceUpdate', async (oldPresence, newPresence) => {
@@ -156,6 +159,16 @@ client.on("interactionCreate", async (interaction) => {
             } else {
                 await interaction.reply("Please specify a valid text channel.");
             }
+        } else if (interaction.commandName === "jukebox") {
+            await interaction.reply("https://media.discordapp.net/attachments/1020047166997266517/1132358153066004530/image.png?ex=67d267f5&is=67d11675&hm=f51b3ad794fb3ca202fc8bbe13517d71fb2283278d4654c7a83787d1f85c2989&=&format=webp&quality=lossless")
+        } else if (interaction.commandName === "too-much-shit"){
+            await interaction.reply("https://media.discordapp.net/attachments/1020047166997266517/1349423848239661117/9n58bl.jpg?ex=67d30c64&is=67d1bae4&hm=71f3512ba88ddf4b797c9c253781be161cd595ceab235d02f81932346bfefc82&=&format=webp&width=418&height=696")
+        } else if (interaction.commandName === "idiot") {
+            await interaction.reply("https://cdn.discordapp.com/attachments/1020047166997266517/1135125981091344415/Video.Guru_20230730_135435693.mp4?ex=67d29673&is=67d144f3&hm=399111b0e551533ac74d1a03dbc6668479db5065ff9a57232ab6725ca56367ce&")
+        } else if(interaction.commandName === "idc") {
+            await interaction.reply("https://media.discordapp.net/attachments/1020047166997266517/1126929871478726696/image.png?ex=67d26efa&is=67d11d7a&hm=0a26edc291d944ddcbe33e51bfafd1096dbcb271fb587f2e141f9eba84f57415&=&format=webp&quality=lossless")
+        } else if(interaction.commandName === "movie-night") {
+            await interaction.reply("https://media.discordapp.net/attachments/1020047166997266517/1134542352778805248/image.png?ex=67d27127&is=67d11fa7&hm=5914ca5ed633d9eacb2c6f6d6be03963ed0feead6b031497273a316513ad5dca&=&format=webp&quality=lossless")
         }
     }
 });
