@@ -21,13 +21,27 @@ client.once('ready', () => {
 
 client.on("messageCreate", message => {
     if (message.author.bot) return;
+    
+    const now = new Date();
+    const day = now.getDate();
+    const month = now.getMonth() + 1; 
+    
     if (message.mentions.has(client.user)) {
-        message.channel.send("Hi there! Use **/alerts-channel** to set up the bot");
+        if (month === 4 && day === 22) {
+            return message.channel.send("https://media.discordapp.net/attachments/1020047166997266517/1364232662289481819/caption.gif?ex=6808ec2c&is=68079aac&hm=324c55fa0e383bc0c07cd5456af9a16c99380c7d0e9dcd7b6ad1e67e7c0be3e0&=&width=188&height=300");
+        }
+        else if (month === 7 && day === 7) {
+            return message.channel.send("https://cdn.discordapp.com/attachments/1020047166997266517/1364232415244980297/neverkillyourself.mp4?ex=6808ebf2&is=68079a72&hm=954742819d93e01c8075f490be675674a9a165eed7c9e18fe37821fb6546b23c&");
+        }
+        else {
+            return message.channel.send("Hi there! Use **/alerts-channel** to set up the bot");
+        }
     }
+    
     if (message.content.toLowerCase().includes("yomtun")) {
         message.channel.send("https://media.discordapp.net/attachments/1020047166997266517/1147213123644821565/OzBohIhN.gif?ex=67d30dfa&is=67d1bc7a&hm=f85c4447d3a691672ea24f62373b81076c3cac22405cb1c5c7ffdc921e979ab3&=");
     }
-})
+});
 
 client.on('presenceUpdate', async (oldPresence, newPresence) => {
     const user = newPresence.user;
