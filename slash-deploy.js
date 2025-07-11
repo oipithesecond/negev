@@ -2,7 +2,7 @@ const { REST, Routes, SlashCommandBuilder } = require("discord.js")
 require('dotenv').config();
 
 const botID = "894614880877948968"
-// const serverID = "894591665757626399"
+// const serverID = "process.env.serverID"
 const botToken = process.env.DISCORD_TOKEN
 
 const rest = new REST().setToken(botToken)
@@ -43,7 +43,23 @@ const slashRegister = async() => {
 
                 new SlashCommandBuilder()
                 .setName("movie-night")
-                .setDescription("uri attack")
+                .setDescription("uri attack"),
+
+                new SlashCommandBuilder()
+                .setName("obliterate")
+                .setDescription("anchovy attack"),
+
+                new SlashCommandBuilder()
+                .setName("anime-night")
+                .setDescription("Double Naruto"),
+
+                new SlashCommandBuilder()
+                .setName("kys")
+                .setDescription("daily affirmations"),
+
+                new SlashCommandBuilder()
+                .setName("my-honest-reaction")
+                .setDescription("mera khel khatam hai"),
             ]
         })
     }catch(error){

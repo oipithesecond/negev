@@ -27,11 +27,13 @@ client.on("messageCreate", message => {
     const month = now.getMonth() + 1; 
     
     if (message.mentions.has(client.user)) {
-        if (month === 4 && day === 22) {
-            return message.channel.send("https://media.discordapp.net/attachments/1020047166997266517/1364232662289481819/caption.gif?ex=6808ec2c&is=68079aac&hm=324c55fa0e383bc0c07cd5456af9a16c99380c7d0e9dcd7b6ad1e67e7c0be3e0&=&width=188&height=300");
+        console.log(day);
+        console.log(month);
+        if (month == process.env.BMONTH_A && day == process.env.BDAY_A) {
+            return message.channel.send(process.env.BDAYmedia_A);
         }
-        else if (month === 7 && day === 7) {
-            return message.channel.send("https://cdn.discordapp.com/attachments/1020047166997266517/1364232415244980297/neverkillyourself.mp4?ex=6808ebf2&is=68079a72&hm=954742819d93e01c8075f490be675674a9a165eed7c9e18fe37821fb6546b23c&");
+        else if (month == process.env.BMONTH_O && day == process.env.BDAY_O) {
+            return message.channel.send(process.env.BDAYmedia_O);
         }
         else {
             return message.channel.send("Hi there! Use **/alerts-channel** to set up the bot");
@@ -39,7 +41,10 @@ client.on("messageCreate", message => {
     }
     
     if (message.content.toLowerCase().includes("yomtun")) {
-        message.channel.send("https://media.discordapp.net/attachments/1020047166997266517/1147213123644821565/OzBohIhN.gif?ex=67d30dfa&is=67d1bc7a&hm=f85c4447d3a691672ea24f62373b81076c3cac22405cb1c5c7ffdc921e979ab3&=");
+        message.channel.send(process.env.YOMTUN);
+    }
+    if (message.content.toLowerCase().includes("what do we live for")) {
+        message.channel.send(process.env.HYPE_MOMENTS);
     }
 });
 
@@ -174,15 +179,23 @@ client.on("interactionCreate", async (interaction) => {
                 await interaction.reply("Please specify a valid text channel.");
             }
         } else if (interaction.commandName === "jukebox") {
-            await interaction.reply("https://media.discordapp.net/attachments/1020047166997266517/1132358153066004530/image.png?ex=67d267f5&is=67d11675&hm=f51b3ad794fb3ca202fc8bbe13517d71fb2283278d4654c7a83787d1f85c2989&=&format=webp&quality=lossless")
+            await interaction.reply(process.env.JUKEBOX)
         } else if (interaction.commandName === "too-much-shit"){
-            await interaction.reply("https://media.discordapp.net/attachments/1020047166997266517/1349423848239661117/9n58bl.jpg?ex=67d30c64&is=67d1bae4&hm=71f3512ba88ddf4b797c9c253781be161cd595ceab235d02f81932346bfefc82&=&format=webp&width=418&height=696")
+            await interaction.reply(process.env.TOO_MUCH_SHIT)
         } else if (interaction.commandName === "idiot") {
-            await interaction.reply("https://cdn.discordapp.com/attachments/1020047166997266517/1135125981091344415/Video.Guru_20230730_135435693.mp4?ex=67d29673&is=67d144f3&hm=399111b0e551533ac74d1a03dbc6668479db5065ff9a57232ab6725ca56367ce&")
+            await interaction.reply(process.env.IDIOT)
         } else if(interaction.commandName === "idc") {
-            await interaction.reply("https://media.discordapp.net/attachments/1020047166997266517/1126929871478726696/image.png?ex=67d26efa&is=67d11d7a&hm=0a26edc291d944ddcbe33e51bfafd1096dbcb271fb587f2e141f9eba84f57415&=&format=webp&quality=lossless")
+            await interaction.reply(process.env.IDC)
         } else if(interaction.commandName === "movie-night") {
-            await interaction.reply("https://media.discordapp.net/attachments/1020047166997266517/1134542352778805248/image.png?ex=67d27127&is=67d11fa7&hm=5914ca5ed633d9eacb2c6f6d6be03963ed0feead6b031497273a316513ad5dca&=&format=webp&quality=lossless")
+            await interaction.reply(process.env.MOVIE_NIGHT)
+        } else if(interaction.commandName === "obliterate") {
+            await interaction.reply(process.env.OBLITERATE)
+        } else if(interaction.commandName === "anime-night") {
+            await interaction.reply(process.env.ANIME_NIGHT)
+        } else if(interaction.commandName === "kys") {
+            await interaction.reply(process.env.KYS)
+        } else if(interaction.commandName === "my-honest-reaction") {
+            await interaction.reply(process.env.MYHONESTREACTION)
         }
     }
 });
