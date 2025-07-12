@@ -60,6 +60,18 @@ const slashRegister = async() => {
                 new SlashCommandBuilder()
                 .setName("my-honest-reaction")
                 .setDescription("mera khel khatam hai"),
+
+                new SlashCommandBuilder()
+                .setName("avatar")
+                .setDescription("get a user's avatar")
+                .addUserOption(option => 
+                    option
+                        .setName("user")
+                        .setDescription("The user whose avatar you want")
+                        .setRequired(false)
+                )
+                .toJSON()
+
             ]
         })
     }catch(error){

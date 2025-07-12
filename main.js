@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, ChannelType, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, ChannelType, ActivityType, EmbedBuilder } = require('discord.js');
 const { Guild } = require('./model');
 const GAME_THRESHOLDS = require('./gameThresholds');
 require('dotenv').config();
@@ -196,6 +196,17 @@ client.on("interactionCreate", async (interaction) => {
             await interaction.reply(process.env.KYS)
         } else if(interaction.commandName === "my-honest-reaction") {
             await interaction.reply(process.env.MYHONESTREACTION)
+        } else if(interaction.commandName === "avatar") {
+            const user = interaction.options.getUser('user') || interaction.user;
+            const avatarURL = user.displayAvatarURL({ dynamic: true, size: 4096 });
+
+            const embed = new EmbedBuilder()
+                .setColor('#ec88f7')
+                .setTitle(`${user.username}'s Avatar`)
+                .setImage(avatarURL)
+                .setFooter({ text: `Requested by ${interaction.user.username}` });
+
+            await interaction.reply({ embeds: [embed] });
         }
     }
 });
