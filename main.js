@@ -13,6 +13,7 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
     ],
 });
+client.userActivityMap = new Map();
 
 // --- DYNAMIC COMMANDS HANDLER ---
 client.commands = new Collection();
@@ -46,6 +47,44 @@ for (const file of eventFiles) {
         client.on(event.name, (...args) => event.execute(...args));
     }
 }
+
+setInterval(async () => {
+    // Access the shared map from the client
+    const userActivityMap = client.userActivityMap;
+    if (!userActivityMap) return; // a safety check
+
+    const currentTime = Date.now();
+    for (const [userId, value] of userActivityMap) {
+        const { trackedGame, startTime, notifiedThresholds } = value;
+        const elapsedTime = currentTime - startTime;
+
+        const user = await client.users.fetch(userId).catch(() => null);
+        if (!user) {
+            userActivityMap.delete(userId); // Clean up if user is not found
+            continue;
+        }
+
+        const thresholds = GAME_THRESHOLDS[trackedGame] || GAME_THRESHOLDS["Default"];
+        for (const threshold of thresholds) {
+            if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
+                // Find the guild the user is in
+                const guild = client.guilds.cache.find(g => g.members.cache.has(userId));
+                if (!guild) continue;
+
+                const guildData = await Guild.findOne({ guildId: guild.id });
+                if (guildData && guildData.channelId) {
+                    const channel = await client.channels.fetch(guildData.channelId).catch(() => null);
+                    if (channel) {
+                        channel.send(`${user.username}, ${threshold.message}`);
+                        notifiedThresholds.push(threshold.duration);
+                        console.log(`Alert sent via interval to ${user.username} in ${channel.name}`);
+                    }
+                }
+            }
+        }
+    }
+}, 60 * 1000); // 60 seconds
+
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
