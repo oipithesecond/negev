@@ -9,31 +9,33 @@ module.exports = {
             option
                 .setName('channel')
                 .setDescription('The text channel to send alerts in.')
-                .addChannelTypes(ChannelType.GuildText) // Ensures only text channels can be selected
+                .addChannelTypes(ChannelType.GuildText)
                 .setRequired(true))
-        .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator), // Only admins can use this
+        .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator),
 
     async execute(interaction) {
-        // Defer reply for potentially slow database operations
         await interaction.deferReply({ ephemeral: true });
 
         const channel = interaction.options.getChannel('channel');
-        const guildId = interaction.guild.id;
+        const guild = interaction.guild;
 
         try {
-            // Find the guild's configuration and update it, or create a new one
             await Guild.findOneAndUpdate(
-                { guildId: guildId },
-                { channelId: channel.id },
+                { guildId: guild.id },
+                {
+                    guildName: guild.name, 
+                    channelId: channel.id,
+                    channelName: channel.name,
+                },
                 { upsert: true, new: true }
             );
 
-            await interaction.editReply(`✅ Alerts will now be sent to ${channel}.`);
-            console.log(`Alert channel set for guild ${guildId}: #${channel.name}`);
+            await interaction.editReply(`Alerts will now be sent to ${channel}.`);
+            console.log(`Alert channel set for guild ${guild}: #${channel.name}`);
 
         } catch (error) {
             console.error("Error setting alerts channel:", error);
-            await interaction.editReply("❌ Something went wrong while updating the database.");
+            await interaction.editReply("Something went wrong while updating the database.");
         }
     },
 };

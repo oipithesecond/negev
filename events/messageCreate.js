@@ -3,15 +3,12 @@ const { Events } = require('discord.js');
 module.exports = {
     name: Events.MessageCreate,
     async execute(message) {
-        // Ignore messages from bots
         if (message.author.bot) return;
 
-        // --- Keyword & Mention Responders ---
         const now = new Date();
         const day = now.getDate();
         const month = now.getMonth() + 1;
 
-        // Birthday mention check
         if (message.mentions.has(message.client.user)) {
             if (month == process.env.BMONTH_A && day == process.env.BDAY_A) {
                 return message.channel.send(process.env.BDAYmedia_A);
@@ -22,7 +19,6 @@ module.exports = {
             }
         }
 
-        // Keyword checks
         if (message.content.toLowerCase().includes("yomtun")) {
             message.channel.send(process.env.YOMTUN);
         }

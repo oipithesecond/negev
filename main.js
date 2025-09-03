@@ -1,10 +1,14 @@
-// index.js
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const connectDatabase = require('./database/connect');
 require('dotenv').config();
+(async () => {
+    await connectDatabase();
+})();
 
-// Create a new client instance
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -15,7 +19,7 @@ const client = new Client({
 });
 client.userActivityMap = new Map();
 
-// --- DYNAMIC COMMANDS HANDLER ---
+//commands handler
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
@@ -34,7 +38,7 @@ for (const folder of commandFolders) {
     }
 }
 
-// --- DYNAMIC EVENTS HANDLER ---
+//events handler
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
@@ -49,9 +53,8 @@ for (const file of eventFiles) {
 }
 
 setInterval(async () => {
-    // Access the shared map from the client
     const userActivityMap = client.userActivityMap;
-    if (!userActivityMap) return; // a safety check
+    if (!userActivityMap) return; 
 
     const currentTime = Date.now();
     for (const [userId, value] of userActivityMap) {
@@ -60,14 +63,13 @@ setInterval(async () => {
 
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
-            userActivityMap.delete(userId); // Clean up if user is not found
+            userActivityMap.delete(userId); 
             continue;
         }
 
         const thresholds = GAME_THRESHOLDS[trackedGame] || GAME_THRESHOLDS["Default"];
         for (const threshold of thresholds) {
             if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
-                // Find the guild the user is in
                 const guild = client.guilds.cache.find(g => g.members.cache.has(userId));
                 if (!guild) continue;
 
@@ -86,5 +88,4 @@ setInterval(async () => {
 }, 60 * 1000); // 60 seconds
 
 
-// Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);

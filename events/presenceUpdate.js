@@ -8,7 +8,6 @@ module.exports = {
         const user = newPresence.user;
         if (user.bot) return;
 
-        // Get the shared map from the client object
         const userActivityMap = newPresence.client.userActivityMap;
 
         const playingActivity = newPresence.activities.find(activity => activity.type === ActivityType.Playing);
@@ -36,7 +35,6 @@ module.exports = {
                         }
                     }
                 } else {
-                    // Game switched, reset tracking for the user
                     userActivityMap.set(user.id, {
                         trackedGame: gameName,
                         startTime: currentTime,
@@ -44,7 +42,6 @@ module.exports = {
                     });
                 }
             } else {
-                // Start new tracking for the user
                 userActivityMap.set(user.id, {
                     trackedGame: gameName,
                     startTime: currentTime,
@@ -52,7 +49,6 @@ module.exports = {
                 });
             }
         } else {
-            // User is no longer playing, remove them from tracking
             userActivityMap.delete(user.id);
         }
     },

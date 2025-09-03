@@ -1,4 +1,3 @@
-// events/ready.js
 const { Events } = require('discord.js');
 
 module.exports = {

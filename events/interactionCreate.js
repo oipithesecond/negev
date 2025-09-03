@@ -1,4 +1,3 @@
-// events/interactionCreate.js
 const { Events } = require('discord.js');
 
 module.exports = {
