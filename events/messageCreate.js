@@ -14,9 +14,10 @@ module.exports = {
                 return message.channel.send(process.env.BDAYmedia_A);
             } else if (month == process.env.BMONTH_O && day == process.env.BDAY_O) {
                 return message.channel.send(process.env.BDAYmedia_O);
-            } else {
-                return message.channel.send("Hi there! Use `/alerts-channel` to set up the bot.");
-            }
+            } 
+        }
+        if (message.mentions.has(message.client.user) && !message.reference) {
+            return message.channel.send("Hi there! Use `/alerts-channel` to set up the bot.");
         }
 
         if (message.content.toLowerCase().includes("yomtun")) {
