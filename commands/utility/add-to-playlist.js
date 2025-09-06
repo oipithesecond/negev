@@ -30,8 +30,8 @@ module.exports = {
     async execute(interaction) {
         await interaction.deferReply();
 
-        const VOTE_THRESHOLD = 1;
-        const VOTE_TIME = 30000; // 1/2 minutes
+        const VOTE_THRESHOLD = 2;
+        const VOTE_TIME = 150000; // 2.5 minutes
 
         const presence = interaction.member.presence;
         if (!presence) {
@@ -52,16 +52,15 @@ module.exports = {
         console.log(`Track detected: ${trackName} by ${trackArtist} (ID: ${trackId})`);
 
         const embed = new EmbedBuilder()
-            .setColor('#1DB954')
+            .setColor('#ec88f7')
             .setTitle(`Vote to Add Song to Playlist`)
-            .setDescription(`**${trackName}**\nby **${trackArtist}**\n\n**Reply with "yes" to vote for adding this song**\n**Reply with "no" to vote against adding this song**`)
+            .setDescription(`**${trackName}**\nby **${trackArtist}**\n\n**Reply with "yes" to add this song**\n`)
             .setThumbnail(trackAlbumArt)
-            .setFooter({ text: `Vote ends in 5 minutes. Needs ${VOTE_THRESHOLD} "yes" votes to pass.` });
+            .setFooter({ text: `Vote ends in 2 minutes. Needs ${VOTE_THRESHOLD} "yes" votes to pass.` });
 
         await interaction.editReply({ embeds: [embed] });
         const voteMessage = await interaction.fetchReply();
 
-        // Track voters and their votes
         const votes = new Map(); // userID -> vote ('yes' or 'no')
         
         // Create a collector for message replies
@@ -99,7 +98,7 @@ module.exports = {
             
             console.log(`Current tally: ${yesCount} yes, ${noCount} no`);
             
-            // Check if we've reached the threshold
+            // Check for threshold
             if (yesCount >= VOTE_THRESHOLD) {
                 console.log(`Vote threshold reached with ${yesCount} yes votes!`);
                 collector.stop('threshold');
@@ -109,7 +108,6 @@ module.exports = {
         collector.on('end', async (collected, reason) => {
             console.log(`Vote ended. Reason: ${reason}`);
             
-            // Count final votes
             let yesCount = 0;
             let noCount = 0;
             
@@ -141,15 +139,22 @@ module.exports = {
                     
                     console.log('Spotify API response:', result.body);
 
+                    const celebrationGifs = [
+                        'https://tenor.com/view/it%27s-mid-it%27s-peak-gif-10331198441245051584', 
+                        'https://tenor.com/view/ok-schizo-ok-schizo-schizophrenia-gibbon-gif-23667455'   
+                    ];
+                    
+                    const randomGif = celebrationGifs[Math.floor(Math.random() * celebrationGifs.length)];
+
                     const successEmbed = new EmbedBuilder()
-                        .setColor('#1ED760')
-                        .setTitle('✅ Vote Passed & Song Added!')
-                        .setDescription(`**${trackName}** by **${trackArtist}** has been added to the playlist.\n\n**Final Vote:** ${yesCount} yes, ${noCount} no`)
+                        .setColor('#ec88f7')
+                        .setTitle('Vote Passed & Song Added!')
+                        .setDescription(`**${trackName}** by **${trackArtist}** has been added to Too Cool For Therapy.\n\n**Final Vote:** ${yesCount} yes, ${noCount} no`)
                         .setThumbnail(trackAlbumArt);
                     
                     await voteMessage.edit({ 
                         embeds: [successEmbed],
-                        content: '**The vote passed and the song was added to the playlist!**'
+                        content: randomGif
                     });
                 } catch (err) {
                     console.error('Error adding track to Spotify:', err);
@@ -158,14 +163,14 @@ module.exports = {
                     }
                     
                     await voteMessage.edit({ 
-                        content: `❌ Vote passed (${yesCount} yes, ${noCount} no), but I failed to add the song to Spotify. Please check my permissions and try again.`, 
+                        content: ` Vote passed (${yesCount} yes, ${noCount} no), but I failed to add the song to Spotify. Please check my permissions and try again.`, 
                         embeds: [] 
                     });
                 }
             } else {
                 const failEmbed = new EmbedBuilder()
-                    .setColor('#F04747')
-                    .setTitle('❌ Vote Failed')
+                    .setColor('#ec88f7')
+                    .setTitle('Vote Failed')
                     .setDescription(`The vote for **${trackName}** did not reach ${VOTE_THRESHOLD} "yes" votes.\n\n**Final Vote:** ${yesCount} yes, ${noCount} no`)
                     .setThumbnail(trackAlbumArt);
                 await voteMessage.edit({ 
