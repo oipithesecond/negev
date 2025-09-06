@@ -6,6 +6,10 @@ const spotifyApi = new SpotifyWebApi({
     clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
     refreshToken: process.env.SPOTIFY_REFRESH_TOKEN,
 });
+const celebrationGifs = [
+    'https://tenor.com/view/it%27s-mid-it%27s-peak-gif-10331198441245051584', 
+    'https://tenor.com/view/ok-schizo-ok-schizo-schizophrenia-gibbon-gif-23667455'   
+];
 
 async function refreshAccessToken() {
     try {
@@ -138,11 +142,6 @@ module.exports = {
                     );
                     
                     console.log('Spotify API response:', result.body);
-
-                    const celebrationGifs = [
-                        'https://tenor.com/view/it%27s-mid-it%27s-peak-gif-10331198441245051584', 
-                        'https://tenor.com/view/ok-schizo-ok-schizo-schizophrenia-gibbon-gif-23667455'   
-                    ];
                     
                     const randomGif = celebrationGifs[Math.floor(Math.random() * celebrationGifs.length)];
 
@@ -154,8 +153,13 @@ module.exports = {
                     
                     await voteMessage.edit({ 
                         embeds: [successEmbed],
-                        content: randomGif
+                        content: ' '
                     });
+                    
+                    setTimeout(async () => {
+                        const randomGif = celebrationGifs[Math.floor(Math.random() * celebrationGifs.length)];
+                        await interaction.channel.send(randomGif);
+                    }, 1000); // 1 second delay
                 } catch (err) {
                     console.error('Error adding track to Spotify:', err);
                     if (err.body) {
