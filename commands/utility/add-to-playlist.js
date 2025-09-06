@@ -12,8 +12,10 @@ async function refreshAccessToken() {
         const data = await spotifyApi.refreshAccessToken();
         spotifyApi.setAccessToken(data.body['access_token']);
         console.log('Spotify access token refreshed!');
+        return true;
     } catch (err) {
         console.error('Could not refresh Spotify access token', err);
+        return false;
     }
 }
 
@@ -26,21 +28,19 @@ module.exports = {
         .setDescription('Starts a vote to add your currently playing Spotify song to the server playlist.'),
 
     async execute(interaction) {
-        await interaction.deferReply(); // Defer immediately
+        await interaction.deferReply();
 
-        const VOTE_THRESHOLD = 2;
-        const VOTE_TIME = 300000;
+        const VOTE_THRESHOLD = 1;
+        const VOTE_TIME = 30000; // 1/2 minutes
 
         const presence = interaction.member.presence;
         if (!presence) {
-            // Use editReply for the error message
             return interaction.editReply({ content: 'I can\'t see your status. Please make sure your Discord client is active.', ephemeral: true });
         }
 
         const spotifyActivity = presence.activities.find(activity => activity.name === 'Spotify' && activity.type === 2);
 
         if (!spotifyActivity) {
-            // Use editReply for this error message as well
             return interaction.editReply({ content: 'You are not currently listening to Spotify, or your activity is not shared.', ephemeral: true });
         }
 
@@ -49,52 +49,130 @@ module.exports = {
         const trackArtist = spotifyActivity.state.replace(/;/g, ',');
         const trackAlbumArt = spotifyActivity.assets.largeImageURL();
 
+        console.log(`Track detected: ${trackName} by ${trackArtist} (ID: ${trackId})`);
+
         const embed = new EmbedBuilder()
             .setColor('#1DB954')
-            .setTitle(`Vote to Add Song:`)
-            .setDescription(`**${trackName}**\nby **${trackArtist}**`)
+            .setTitle(`Vote to Add Song to Playlist`)
+            .setDescription(`**${trackName}**\nby **${trackArtist}**\n\n**Reply with "yes" to vote for adding this song**\n**Reply with "no" to vote against adding this song**`)
             .setThumbnail(trackAlbumArt)
-            .setFooter({ text: `Vote ends in 5 minutes. Needs ${VOTE_THRESHOLD} votes to pass.` });
+            .setFooter({ text: `Vote ends in 5 minutes. Needs ${VOTE_THRESHOLD} "yes" votes to pass.` });
 
         await interaction.editReply({ embeds: [embed] });
         const voteMessage = await interaction.fetchReply();
 
-        await voteMessage.react('👍');
+        // Track voters and their votes
+        const votes = new Map(); // userID -> vote ('yes' or 'no')
+        
+        // Create a collector for message replies
+        const filter = m => {
+            // Check if this is a reply to our vote message
+            if (m.reference?.messageId !== voteMessage.id) return false;
+            
+            // Check if the message content is a valid vote
+            const content = m.content.toLowerCase().trim();
+            return (content === 'yes' || content === 'no') && !m.author.bot;
+        };
+        
+        const collector = interaction.channel.createMessageCollector({ 
+            filter, 
+            time: VOTE_TIME 
+        });
 
-        const filter = (reaction, user) => reaction.emoji.name === '👍' && !user.bot;
-        const collector = voteMessage.createReactionCollector({ filter, time: VOTE_TIME });
-
-        collector.on('collect', (reaction, user) => {
-            if (reaction.count >= VOTE_THRESHOLD) {
-                collector.stop('limit');
+        collector.on('collect', m => {
+            const vote = m.content.toLowerCase().trim();
+            const userId = m.author.id;
+            
+            // Update the user's vote
+            votes.set(userId, vote);
+            
+            console.log(`Vote received from ${m.author.tag}: ${vote}. Total voters: ${votes.size}`);
+            
+            // Count current votes
+            let yesCount = 0;
+            let noCount = 0;
+            
+            for (let [_, v] of votes) {
+                if (v === 'yes') yesCount++;
+                else if (v === 'no') noCount++;
+            }
+            
+            console.log(`Current tally: ${yesCount} yes, ${noCount} no`);
+            
+            // Check if we've reached the threshold
+            if (yesCount >= VOTE_THRESHOLD) {
+                console.log(`Vote threshold reached with ${yesCount} yes votes!`);
+                collector.stop('threshold');
             }
         });
 
         collector.on('end', async (collected, reason) => {
-            const finalReaction = collected.first();
-            if (reason === 'limit' && finalReaction && finalReaction.count >= VOTE_THRESHOLD) {
+            console.log(`Vote ended. Reason: ${reason}`);
+            
+            // Count final votes
+            let yesCount = 0;
+            let noCount = 0;
+            
+            for (let [_, vote] of votes) {
+                if (vote === 'yes') yesCount++;
+                else if (vote === 'no') noCount++;
+            }
+            
+            console.log(`Final tally: ${yesCount} yes, ${noCount} no`);
+            
+            if (reason === 'threshold' && yesCount >= VOTE_THRESHOLD) {
                 try {
-                    await refreshAccessToken();
-                    await spotifyApi.addTracksToPlaylist(process.env.SPOTIFY_PLAYLIST_ID, [`spotify:track:${trackId}`]);
+                    const tokenRefreshed = await refreshAccessToken();
+                    if (!tokenRefreshed) {
+                        throw new Error('Failed to refresh Spotify access token');
+                    }
+
+                    if (!trackId) {
+                        throw new Error('No track ID found');
+                    }
+
+                    const trackUri = `spotify:track:${trackId}`;
+                    console.log(`Attempting to add track: ${trackUri} to playlist: ${process.env.SPOTIFY_PLAYLIST_ID1}`);
+                    
+                    const result = await spotifyApi.addTracksToPlaylist(
+                        process.env.SPOTIFY_PLAYLIST_ID1, 
+                        [trackUri]
+                    );
+                    
+                    console.log('Spotify API response:', result.body);
+
                     const successEmbed = new EmbedBuilder()
                         .setColor('#1ED760')
                         .setTitle('✅ Vote Passed & Song Added!')
-                        .setDescription(`**${trackName}** by **${trackArtist}** has been added to the playlist.`)
+                        .setDescription(`**${trackName}** by **${trackArtist}** has been added to the playlist.\n\n**Final Vote:** ${yesCount} yes, ${noCount} no`)
                         .setThumbnail(trackAlbumArt);
-                    await voteMessage.edit({ embeds: [successEmbed], content: '' });
+                    
+                    await voteMessage.edit({ 
+                        embeds: [successEmbed],
+                        content: '**The vote passed and the song was added to the playlist!**'
+                    });
                 } catch (err) {
-                    console.error('Error adding track to Spotify:', err.body || err);
-                    await voteMessage.edit({ content: '❌ Vote passed, but I failed to add the song to Spotify. (Check console for errors)', embeds: [] });
+                    console.error('Error adding track to Spotify:', err);
+                    if (err.body) {
+                        console.error('Spotify API error details:', err.body);
+                    }
+                    
+                    await voteMessage.edit({ 
+                        content: `❌ Vote passed (${yesCount} yes, ${noCount} no), but I failed to add the song to Spotify. Please check my permissions and try again.`, 
+                        embeds: [] 
+                    });
                 }
             } else {
                 const failEmbed = new EmbedBuilder()
                     .setColor('#F04747')
                     .setTitle('❌ Vote Failed')
-                    .setDescription(`The vote for **${trackName}** did not reach ${VOTE_THRESHOLD} votes.`)
+                    .setDescription(`The vote for **${trackName}** did not reach ${VOTE_THRESHOLD} "yes" votes.\n\n**Final Vote:** ${yesCount} yes, ${noCount} no`)
                     .setThumbnail(trackAlbumArt);
-                await voteMessage.edit({ embeds: [failEmbed], content: '' });
+                await voteMessage.edit({ 
+                    embeds: [failEmbed],
+                    content: '**The vote did not pass.**'
+                });
             }
-            await voteMessage.reactions.removeAll().catch(error => console.error('Failed to clear reactions:', error));
         });
     },
 };
