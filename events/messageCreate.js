@@ -1,4 +1,4 @@
-const { Events } = require('discord.js');
+const { Events, Collection } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -8,10 +8,29 @@ module.exports = {
     async execute(message) {
         if (message.author.bot) return;
 
+        const { cooldowns } = message.client;
+
         const triggerPhrase = "sakura,";
         const messageContent = message.content.trim();
 
         if (messageContent.toLowerCase().startsWith(triggerPhrase)) {
+            // --- COOLDOWN LOGIC START ---
+            const cooldownAmount = 5 * 1000; // 5 seconds
+            const now = Date.now();
+
+            if (cooldowns.has(message.author.id)) {
+                const expirationTime = cooldowns.get(message.author.id) + cooldownAmount;
+
+                if (now < expirationTime) {
+                    const timeLeft = (expirationTime - now) / 1000;
+                    return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before I can think again.`);
+                }
+            }
+            
+            cooldowns.set(message.author.id, now);
+            setTimeout(() => cooldowns.delete(message.author.id), cooldownAmount);
+            // --- COOLDOWN LOGIC END ---
+
             // Get the actual user prompt by removing the trigger phrase
             const userQuery = messageContent.substring(triggerPhrase.length).trim();
 
@@ -20,25 +39,16 @@ module.exports = {
 
             try {
                 // Fetch the last 15 messages to get context
-                const history = await message.channel.messages.fetch({ limit: 15 });
+                const history = await message.channel.messages.fetch({ limit: 50 });
                 const formattedHistory = history.reverse()
                     .filter(msg => msg.content && !msg.author.bot) // Filter out empty messages and bots
                     .map(msg => `${msg.author.username}: ${msg.content}`)
                     .join('\n');
 
-                const masterPrompt = `
-You are a Discord bot named Sakura. Your personality should match the vibe of the following chat conversation.
-Analyze the tone, slang, humor, and sentence length of the users and adopt that style in your response.
-Do not be a generic, overly polite AI. Be natural and fit in with the conversation.
-
-Here is the recent chat history for context:
----
-${formattedHistory}
----
-
-Now, respond to the following message in that same style:
-${message.author.username}: ${userQuery}
-`;
+                const promptTemplate = process.env.SAKURA_VIBE_PROMPT;
+                const masterPrompt = promptTemplate
+                    .replace('{{HISTORY}}', formattedHistory)
+                    .replace('{{QUERY}}', `${message.author.username}: ${userQuery}`);
 
                 const result = await model.generateContent(masterPrompt);
                 const response = await result.response;

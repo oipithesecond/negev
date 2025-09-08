@@ -2,7 +2,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { GoogleGenerativeAI } = require('@google/generative-ai'); 
 const connectDatabase = require('./database/connect');
 const Guild = require('./database/model'); 
 const GAME_THRESHOLDS = require('./config/gameThresholds');
@@ -10,7 +9,6 @@ require('dotenv').config();
 (async () => {
     await connectDatabase();
 })();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 
 const client = new Client({
@@ -22,6 +20,7 @@ const client = new Client({
     ],
 });
 client.userActivityMap = new Map();
+client.cooldowns = new Collection();
 
 //commands handler
 client.commands = new Collection();
