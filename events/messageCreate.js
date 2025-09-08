@@ -38,7 +38,6 @@ module.exports = {
             await message.channel.sendTyping();
 
             try {
-                // Fetch the last 15 messages to get context
                 const history = await message.channel.messages.fetch({ limit: 50 });
                 const formattedHistory = history.reverse()
                     .filter(msg => msg.content && !msg.author.bot) // Filter out empty messages and bots
