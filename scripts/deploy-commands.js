@@ -37,7 +37,7 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
             { body: commands },
         );
 
-        console.log(`✅ Successfully reloaded ${data.length} application (/) commands.`);
+        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
     } catch (error) {
         console.error(error);
     }
