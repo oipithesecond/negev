@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const SpotifyWebApi = require('spotify-web-api-node');
+const Guild = require('../../database/model');
 
 const spotifyApi = new SpotifyWebApi({
     clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -34,7 +35,8 @@ module.exports = {
     async execute(interaction) {
         await interaction.deferReply();
 
-        const VOTE_THRESHOLD = 2;
+        const guildData = await Guild.findOne({ guildId: interaction.guild.id });
+        const VOTE_THRESHOLD = guildData?.voteThreshold || 2;
         const VOTE_TIME = 150000; // 2.5 minutes
 
         const presence = interaction.member.presence;
@@ -124,6 +126,16 @@ module.exports = {
             
             if (reason === 'threshold' && yesCount >= VOTE_THRESHOLD) {
                 try {
+                    const guildData = await Guild.findOne({ guildId: interaction.guild.id });
+
+                    if (!guildData || !guildData.spotifyPlaylistId) {
+                        return voteMessage.edit({
+                            content: 'An admin has not set a server playlist yet! Use the `/setplaylist` command to set one.',
+                            embeds: []
+                        });
+                    }
+                    const playlistId = guildData.spotifyPlaylistId;
+
                     const tokenRefreshed = await refreshAccessToken();
                     if (!tokenRefreshed) {
                         throw new Error('Failed to refresh Spotify access token');
@@ -134,10 +146,10 @@ module.exports = {
                     }
 
                     const trackUri = `spotify:track:${trackId}`;
-                    console.log(`Attempting to add track: ${trackUri} to playlist: ${process.env.SPOTIFY_PLAYLIST_ID1}`);
+                    console.log(`Attempting to add track: ${trackUri} to playlist: ${playlistId}`);
                     
                     const result = await spotifyApi.addTracksToPlaylist(
-                        process.env.SPOTIFY_PLAYLIST_ID1, 
+                        playlistId, 
                         [trackUri]
                     );
                     
