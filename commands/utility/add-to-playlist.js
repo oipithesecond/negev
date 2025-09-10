@@ -135,6 +135,7 @@ module.exports = {
                         });
                     }
                     const playlistId = guildData.spotifyPlaylistId;
+                    const playlistName = guildData.spotifyPlaylistName || "the server playlist";
 
                     const tokenRefreshed = await refreshAccessToken();
                     if (!tokenRefreshed) {
@@ -160,7 +161,7 @@ module.exports = {
                     const successEmbed = new EmbedBuilder()
                         .setColor('#ec88f7')
                         .setTitle('Vote Passed & Song Added!')
-                        .setDescription(`**${trackName}** by **${trackArtist}** has been added to Too Cool For Therapy.\n\n**Final Vote:** ${yesCount} yes, ${noCount} no`)
+                        .setDescription(`**${trackName}** by **${trackArtist}** has been added to **${playlistName}**.\n\n**Final Vote:** ${yesCount} yes, ${noCount} no`)
                         .setThumbnail(trackAlbumArt);
                     
                     await voteMessage.edit({ 

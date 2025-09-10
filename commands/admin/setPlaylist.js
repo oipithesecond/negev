@@ -1,5 +1,20 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 const Guild = require('../../database/model');
+const SpotifyWebApi = require('spotify-web-api-node');
+
+const spotifyApi = new SpotifyWebApi({
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+});
+
+async function getTempSpotifyToken() {
+    try {
+        const data = await spotifyApi.clientCredentialsGrant();
+        spotifyApi.setAccessToken(data.body['access_token']);
+    } catch (error) {
+        console.error('Something went wrong when retrieving an access token', error);
+    }
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,13 +42,23 @@ module.exports = {
         const playlistId = match[1];
 
         try {
+            await getTempSpotifyToken();
+            const playlistDetails = await spotifyApi.getPlaylist(playlistId);
+            const playlistName = playlistDetails.body.name;
+
+            if (!playlistName) {
+                throw new Error("Could not retrieve playlist name.");
+            }
             await Guild.findOneAndUpdate(
                 { guildId: interaction.guild.id },
-                { spotifyPlaylistId: playlistId },
+                {
+                    spotifyPlaylistId: playlistId,
+                    spotifyPlaylistName: playlistName 
+                },
                 { upsert: true }
             );
 
-            await interaction.editReply({ content: `Server playlist has been set successfully!` });
+            await interaction.editReply({ content: `Server playlist has been set to **${playlistName}**!` });
         } catch (error) {
             console.error("Error setting playlist ID:", error);
             await interaction.editReply({ content: 'There was an error saving the playlist to the database.' });

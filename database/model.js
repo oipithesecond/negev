@@ -6,6 +6,7 @@ const guildSchema = new mongoose.Schema({
     channelId: { type: String, required: true },
     channelName: { type: String, required: true },
     spotifyPlaylistId: { type: String, default: null },
+    spotifyPlaylistName: { type: String, default: null },
     voteThreshold: { type: Number, default: 2 }
 });
 
