@@ -18,7 +18,7 @@ Negev is a multi-purpose Discord bot designed to enhance server engagement throu
 
 ### Manual Testing
 - Ping the bot in any text channel where the bot is active to test basic functionality.
-- Trigger the AI using trigger phase `sakura, `
+- Trigger the AI using trigger phase `negev, `
 
 ## Environment Variables
 
