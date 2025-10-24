@@ -10,7 +10,7 @@ module.exports = {
 
         const { cooldowns } = message.client;
 
-        const triggerPhrase = "sakura,";
+        const triggerPhrase = "negev,";
         const messageContent = message.content.trim();
 
         if (messageContent.toLowerCase().startsWith(triggerPhrase)) {
