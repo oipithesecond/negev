@@ -1,8 +1,8 @@
 const { Events, Collection } = require('discord.js');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+const { CohereClient } = require('cohere-ai');
+const cohere = new CohereClient({
+    token: process.env.COHERE_TOKEN,
+});
 
 module.exports = {
     name: Events.MessageCreate,
@@ -39,29 +39,36 @@ module.exports = {
             await message.channel.sendTyping();
 
             try {
+                // --- START COHERE API LOGIC (Group Chat) ---
                 const history = await message.channel.messages.fetch({ limit: 50 });
                 const formattedHistory = history.reverse()
-                    .filter(msg => msg.content && !msg.author.bot) // Filter out empty messages and bots
-                    .map(msg => `${msg.author.username}: ${msg.content}`)
-                    .join('\n');
-
-                const promptTemplate = process.env.SAKURA_VIBE_PROMPT;
-                const masterPrompt = promptTemplate
-                    .replace('{{HISTORY}}', formattedHistory)
-                    .replace('{{QUERY}}', `${message.author.username}: ${userQuery}`);
-
-                const result = await model.generateContent(masterPrompt);
-                const response = await result.response;
-                const text = response.text();
-
-                // Reply directly to the user's message
+                    .filter(msg => msg.content && !msg.author.bot) // Filter out empty messages and all bots
+                    .map(msg => `${msg.author.username}: ${msg.content}`) // Format as "Username: Message"
+                    .join('\n'); // Join into one block
+        
+                const finalMessage = `${formattedHistory}\n${message.author.username}: ${userQuery}`;
+        
+                const response = await cohere.chat({
+                    model: "command-r-08-2024",
+                    message: finalMessage, 
+                    preamble: process.env.NEGEV_VIBE_PROMPT, 
+                });
+        
+                const text = response.text;
+                
+                // --- END COHERE API LOGIC ---
+        
                 await message.reply(text);
-
-            } catch (error) {
-                console.error("Error with Gemini vibe-chat:", error);
-                await message.reply("Sorry, my brain short-circuited. Please try again.");
+        
+            } catch (replyError) {
+                if (replyError.code === 50035 && replyError.rawError?.errors?.message_reference?._errors?.[0]?.code === 'MESSAGE_REFERENCE_UNKNOWN_MESSAGE') {
+                    console.warn(`Original message ${message.id} not found, sending regular message instead.`);
+                    await message.channel.send(`<@${message.author.id}> ${text}`);
+                } else {
+                    throw replyError;
+                }
             }
-            return; // Stop processing after handling the AI chat
+            return; 
         }
 
         const now = new Date();

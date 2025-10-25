@@ -1,6 +1,6 @@
 # Negev
 
-Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by Google's Gemini.
+Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by Cohere.
 
 ## Features
 - Monitors game playtime and sends gentle reminders to users to take breaks.
@@ -29,8 +29,8 @@ CLIENT_ID=your_discord_bot_client_id
 MONGO_URI=your_mongodb_connection_string
 
 --- AI Chatbot ---
-GEMINI_API_KEY=your_google_ai_studio_api_key
-SAKURA_VIBE_PROMPT="You are a Discord bot named... (Customize this master prompt as per your choice)"
+COHERE_TOKEN=your_cohere_ai_api_key
+NEGEV_VIBE_PROMPT="You are a Discord bot named... (Customize this master prompt as per your choice)"
 
 --- Spotify Playlist Adder ---
 SPOTIFY_CLIENT_ID=your_spotify_client_id
