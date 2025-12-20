@@ -40,14 +40,19 @@ module.exports = {
 
             try {
                 // --- START COHERE API LOGIC (Group Chat) ---
-                const history = await message.channel.messages.fetch({ limit: 50 });
-                const formattedHistory = history.reverse()
-                    .filter(msg => msg.content && !msg.author.bot) // Filter out empty messages and all bots
-                    .map(msg => `${msg.author.username}: ${msg.content}`) // Format as "Username: Message"
-                    .join('\n'); // Join into one block
+
+
+                //removed history fetching for current AI API
+                // const history = await message.channel.messages.fetch({ limit: 50 });
+                // const formattedHistory = history.reverse()
+                //     .filter(msg => msg.content && !msg.author.bot) // Filter out empty messages and all bots
+                //     .map(msg => `${msg.author.username}: ${msg.content}`) // Format as "Username: Message"
+                //     .join('\n'); // Join into one block
         
-                const finalMessage = `${formattedHistory}\n${message.author.username}: ${userQuery}`;
-        
+                // const finalMessage = `${formattedHistory}\n${message.author.username}: ${userQuery}`;
+                
+                const finalMessage = `${message.author.username}: ${userQuery}`;
+                
                 const response = await cohere.chat({
                     model: "command-r-08-2024",
                     message: finalMessage, 
