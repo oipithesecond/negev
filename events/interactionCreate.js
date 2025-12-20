@@ -17,7 +17,6 @@ module.exports = {
         } catch (error) {
             console.error(error);
 
-            // This is the new, correct way to send an ephemeral error message
             const errorMessage = {
                 content: 'There was an error while executing this command!',
                 flags: [MessageFlags.Ephemeral]

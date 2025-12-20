@@ -24,17 +24,36 @@ module.exports = {
                     const elapsedTime = currentTime - startTime;
                     for (const threshold of thresholds) {
                         if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
-                            const guildData = await Guild.findOne({ guildId: newPresence.guild.id });
-                            if (guildData) {
-                                const channel = await newPresence.client.channels.fetch(guildData.channelId).catch(() => null);
-                                if (channel) {
-                                    channel.send(`${user.username}, ${threshold.message}`);
-                                    notifiedThresholds.push(threshold.duration);
+
+                            notifiedThresholds.push(threshold.duration);
+                            let finalMessage = threshold.message;
+
+                            if (isDefault) {
+                                finalMessage = finalMessage.replace("gaming", `playing ${gameName}`);
+                            }
+
+                            const allConfiguredGuilds = await Guild.find({ channelId: { $exists: true, $ne: null } });
+                            
+                            for (const guildConfig of allConfiguredGuilds) {
+                                try {
+                                    const guild = newPresence.client.guilds.cache.get(guildConfig.guildId);
+                                    if (!guild) continue;
+                                    const member = await guild.members.fetch(user.id).catch(() => null);
+
+                                    if (member) {
+                                        const channel = await guild.channels.fetch(guildConfig.channelId).catch(() => null);
+                                        if (channel) {
+                                            await channel.send(`${user.username}, ${threshold.message}`);
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.error(`Failed to send notification to guild ${guildConfig.guildId}:`, error);
                                 }
                             }
                         }
                     }
                 } else {
+                    // User switched games, reset tracking
                     userActivityMap.set(user.id, {
                         trackedGame: gameName,
                         startTime: currentTime,
@@ -42,6 +61,7 @@ module.exports = {
                     });
                 }
             } else {
+                // User just started playing
                 userActivityMap.set(user.id, {
                     trackedGame: gameName,
                     startTime: currentTime,
@@ -49,6 +69,7 @@ module.exports = {
                 });
             }
         } else {
+            // User stopped playing
             userActivityMap.delete(user.id);
         }
     },
