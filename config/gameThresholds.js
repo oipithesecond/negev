@@ -49,7 +49,7 @@ const GAME_THRESHOLDS = {
         { duration: 180 * 60 * 1000, message: "You've been jamming for 3 hours on Spotify! Give your ears some rest." }
     ],
     "Default": [
-        { duration: 30 * 60 * 1000, message: "You've been playing for 30 minutes! Remember to stretch and hydrate." },
+        { duration: 30 * 60 * 1000, message: "You've been gaming for 30 minutes! Remember to stretch and hydrate." },
         { duration: 60 * 60 * 1000, message: "You've been gaming for 1 hour! Consider taking a short break." },
         { duration: 120 * 60 * 1000, message: "You've been gaming for 2 hours! Time for a longer rest." }
     ]   

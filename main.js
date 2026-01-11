@@ -1,4 +1,3 @@
-
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
@@ -6,10 +5,10 @@ const connectDatabase = require('./database/connect');
 const Guild = require('./database/model'); 
 const GAME_THRESHOLDS = require('./config/gameThresholds');
 require('dotenv').config();
+
 (async () => {
     await connectDatabase();
 })();
-
 
 const client = new Client({
     intents: [
@@ -19,10 +18,10 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
     ],
 });
+
 client.userActivityMap = new Map();
 client.cooldowns = new Collection();
 
-//commands handler
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
@@ -41,7 +40,6 @@ for (const folder of commandFolders) {
     }
 }
 
-//events handler
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
@@ -57,38 +55,63 @@ for (const file of eventFiles) {
 
 setInterval(async () => {
     const userActivityMap = client.userActivityMap;
-    if (!userActivityMap) return; 
+    if (!userActivityMap || userActivityMap.size === 0) return; 
+
+    // Fetch all guilds that have a channel configured
+    const allConfiguredGuilds = await Guild.find({ channelId: { $exists: true, $ne: null } });
 
     const currentTime = Date.now();
+
     for (const [userId, value] of userActivityMap) {
         const { trackedGame, startTime, notifiedThresholds } = value;
         const elapsedTime = currentTime - startTime;
 
+        // Fetch user object
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
             userActivityMap.delete(userId); 
             continue;
         }
 
-        const thresholds = GAME_THRESHOLDS[trackedGame] || GAME_THRESHOLDS["Default"];
-        for (const threshold of thresholds) {
-            if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
-                const guild = client.guilds.cache.find(g => g.members.cache.has(userId));
-                if (!guild) continue;
+        const isDefault = !GAME_THRESHOLDS[trackedGame];
+        const thresholds = isDefault ? GAME_THRESHOLDS["Default"] : GAME_THRESHOLDS[trackedGame];
 
-                const guildData = await Guild.findOne({ guildId: guild.id });
-                if (guildData && guildData.channelId) {
-                    const channel = await client.channels.fetch(guildData.channelId).catch(() => null);
-                    if (channel) {
-                        channel.send(`${user.username}, ${threshold.message}`);
-                        notifiedThresholds.push(threshold.duration);
-                        console.log(`Alert sent via interval to ${user.username} in ${channel.name}`);
+        for (const threshold of thresholds) {
+            // Check if time passed AND we haven't sent this specific alert yet
+            if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
+                
+                // Prepare message
+                let finalMessage = threshold.message;
+                if (isDefault) {
+                    finalMessage = finalMessage.replace(/gaming/gi, `playing ${trackedGame}`);
+                }
+
+                // Loop through ALL configured guilds to find where this user is a member
+                for (const guildConfig of allConfiguredGuilds) {
+                    const guild = client.guilds.cache.get(guildConfig.guildId);
+                    if (!guild) continue;
+
+                    // Check if user is in this specific guild
+                    const member = await guild.members.fetch(userId).catch(() => null);
+                    
+                    if (member) {
+                        const channel = await client.channels.fetch(guildConfig.channelId).catch(() => null);
+                        if (channel) {
+                            try {
+                                await channel.send(`${user.username}, ${finalMessage}`);
+                                console.log(`Alert sent to ${user.username} in guild: ${guild.name}`);
+                            } catch (sendError) {
+                                console.error(`[Error] Could not send message to ${guild.name}: Missing Permissions.`);
+                            }
+                        }
                     }
                 }
+
+                // Mark as notified so we don't spam
+                notifiedThresholds.push(threshold.duration);
             }
         }
     }
 }, 60 * 1000); // 60 seconds
-
 
 client.login(process.env.DISCORD_TOKEN);

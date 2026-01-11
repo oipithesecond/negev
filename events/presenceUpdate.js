@@ -1,6 +1,4 @@
 const { Events, ActivityType } = require('discord.js');
-const Guild = require('../database/model.js');
-const GAME_THRESHOLDS = require('../config/gameThresholds');
 
 module.exports = {
     name: Events.PresenceUpdate,
@@ -8,69 +6,49 @@ module.exports = {
         const user = newPresence.user;
         if (user.bot) return;
 
+        // Ensure the client has the tracking map
+        if (!newPresence.client.userActivityMap) {
+            newPresence.client.userActivityMap = new Map();
+        }
         const userActivityMap = newPresence.client.userActivityMap;
 
+        // Check if the user is currently playing a game
         const playingActivity = newPresence.activities.find(activity => activity.type === ActivityType.Playing);
 
         if (playingActivity) {
             const currentTime = Date.now();
             const gameName = playingActivity.name;
-            const thresholds = GAME_THRESHOLDS[gameName] || GAME_THRESHOLDS["Default"];
 
+            // Check if we are already tracking this user
             if (userActivityMap.has(user.id)) {
-                const { trackedGame, startTime, notifiedThresholds } = userActivityMap.get(user.id);
+                const { trackedGame } = userActivityMap.get(user.id);
 
-                if (trackedGame === gameName) {
-                    const elapsedTime = currentTime - startTime;
-                    for (const threshold of thresholds) {
-                        if (elapsedTime >= threshold.duration && !notifiedThresholds.includes(threshold.duration)) {
-
-                            notifiedThresholds.push(threshold.duration);
-                            let finalMessage = threshold.message;
-
-                            if (isDefault) {
-                                finalMessage = finalMessage.replace("gaming", `playing ${gameName}`);
-                            }
-
-                            const allConfiguredGuilds = await Guild.find({ channelId: { $exists: true, $ne: null } });
-                            
-                            for (const guildConfig of allConfiguredGuilds) {
-                                try {
-                                    const guild = newPresence.client.guilds.cache.get(guildConfig.guildId);
-                                    if (!guild) continue;
-                                    const member = await guild.members.fetch(user.id).catch(() => null);
-
-                                    if (member) {
-                                        const channel = await guild.channels.fetch(guildConfig.channelId).catch(() => null);
-                                        if (channel) {
-                                            await channel.send(`${user.username}, ${threshold.message}`);
-                                        }
-                                    }
-                                } catch (error) {
-                                    console.error(`Failed to send notification to guild ${guildConfig.guildId}:`, error);
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // User switched games, reset tracking
+                // If the game changed, reset the tracker
+                if (trackedGame !== gameName) {
                     userActivityMap.set(user.id, {
                         trackedGame: gameName,
                         startTime: currentTime,
                         notifiedThresholds: []
                     });
+                    console.log(`[Tracker] ${user.username} switched to ${gameName}`);
                 }
+                // If trackedGame === gameName, do nothing. 
+                // The loop in main.js handles the timer.
             } else {
-                // User just started playing
+                // User just started playing, begin tracking
                 userActivityMap.set(user.id, {
                     trackedGame: gameName,
                     startTime: currentTime,
                     notifiedThresholds: []
                 });
+                console.log(`[Tracker] Started tracking ${user.username} playing ${gameName}`);
             }
         } else {
-            // User stopped playing
-            userActivityMap.delete(user.id);
+            // User stopped playing entirely, remove from map
+            if (userActivityMap.has(user.id)) {
+                userActivityMap.delete(user.id);
+                console.log(`[Tracker] Stopped tracking ${user.username}`);
+            }
         }
     },
 };
