@@ -1,8 +1,4 @@
 const { Events, Collection } = require('discord.js');
-const { CohereClient } = require('cohere-ai');
-const cohere = new CohereClient({
-    token: process.env.COHERE_TOKEN,
-});
 
 module.exports = {
     name: Events.MessageCreate,
@@ -10,18 +6,17 @@ module.exports = {
         if (message.author.bot) return;
 
         const { cooldowns } = message.client;
-
         const triggerPhrase = "negev,";
         const messageContent = message.content.trim();
 
+        // 1. NEGEV AI LOGIC
         if (messageContent.toLowerCase().startsWith(triggerPhrase)) {
             // --- COOLDOWN LOGIC START ---
-            const cooldownAmount = 5 * 1000; // 5 seconds
+            const cooldownAmount = 5 * 1000; 
             const now = Date.now();
 
             if (cooldowns.has(message.author.id)) {
                 const expirationTime = cooldowns.get(message.author.id) + cooldownAmount;
-
                 if (now < expirationTime) {
                     const timeLeft = (expirationTime - now) / 1000;
                     return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before I can think again.`);
@@ -32,48 +27,70 @@ module.exports = {
             setTimeout(() => cooldowns.delete(message.author.id), cooldownAmount);
             // --- COOLDOWN LOGIC END ---
 
-            // Get the actual user prompt by removing the trigger phrase
             const userQuery = messageContent.substring(triggerPhrase.length).trim();
-
-            // Show that the bot is "typing..."
             await message.channel.sendTyping();
 
+            let replyText = ""; 
+
             try {
-                // --- START COHERE API LOGIC (Group Chat) ---
+                // --- HISTORY FETCHING ---
+                const history = await message.channel.messages.fetch({ limit: 10 });
+                const formattedHistory = history.reverse()
+                    .filter(msg => msg.content && !msg.author.bot)
+                    .map(msg => `${msg.author.username}: ${msg.content}`)
+                    .join('\n');
 
-
-                //removed history fetching for current AI API
-                // const history = await message.channel.messages.fetch({ limit: 50 });
-                // const formattedHistory = history.reverse()
-                //     .filter(msg => msg.content && !msg.author.bot) // Filter out empty messages and all bots
-                //     .map(msg => `${msg.author.username}: ${msg.content}`) // Format as "Username: Message"
-                //     .join('\n'); // Join into one block
-        
-                // const finalMessage = `${formattedHistory}\n${message.author.username}: ${userQuery}`;
-                
-                const finalMessage = `${message.author.username}: ${userQuery}`;
-                
-                const response = await cohere.chat({
-                    model: "command-r-08-2024",
-                    message: finalMessage, 
-                    preamble: process.env.NEGEV_VIBE_PROMPT, 
+                // --- OPENROUTER API LOGIC ---
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://discord.com", 
+                        "X-Title": "Negev Vibe"
+                    },
+                    body: JSON.stringify({
+                        model: "tngtech/deepseek-r1t2-chimera:free",
+                        messages: [
+                            {
+                                role: "system",
+                                content: `${process.env.NEGEV_VIBE_PROMPT}\n\nHere is the recent chat history for context:\n${formattedHistory}`
+                            },
+                            {
+                                role: "user",
+                                content: `${message.author.username}: ${userQuery}`
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 300
+                    })
                 });
-        
-                const text = response.text;
-                
-                // --- END COHERE API LOGIC ---
-        
-                await message.reply(text);
-        
-            } catch (replyError) {
-                if (replyError.code === 50035 && replyError.rawError?.errors?.message_reference?._errors?.[0]?.code === 'MESSAGE_REFERENCE_UNKNOWN_MESSAGE') {
-                    console.warn(`Original message ${message.id} not found, sending regular message instead.`);
-                    await message.channel.send(`<@${message.author.id}> ${text}`);
+
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error("OpenRouter Error:", data.error);
+                    return message.reply("My brain is fried (API Error). Try again later.");
+                }
+
+                replyText = data.choices[0].message.content;
+
+                // Cleanup DeepSeek thought tags
+                replyText = replyText.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+
+                if (!replyText) replyText = "...";
+
+                await message.reply(replyText);
+
+            } catch (error) {
+                console.error(error);
+                if (error.code === 50035 || error.rawError?.errors?.message_reference) {
+                     await message.channel.send(`<@${message.author.id}> ${replyText || "My brain stopped working."}`);
                 } else {
-                    throw replyError;
+                     await message.channel.send("Something went wrong with my API connection.");
                 }
             }
-            return; 
+            return;
         }
 
         const now = new Date();
@@ -87,6 +104,7 @@ module.exports = {
                 return message.channel.send(process.env.BDAYmedia_O);
             } 
         }
+
         if (message.mentions.has(message.client.user) && !message.reference) {
             return message.channel.send("Hi there! Use `/alerts-channel` to set up the bot.");
         }
@@ -97,5 +115,5 @@ module.exports = {
         if (message.content.toLowerCase().includes("what do we live for")) {
             message.channel.send(process.env.HYPE_MOMENTS);
         }
-    },
+    }
 };
