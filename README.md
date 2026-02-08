@@ -1,6 +1,6 @@
 # Negev
 
-Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by Deepseek's R1T2 Chimera.
+Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by [Deepseek R1T2 Chimera](https://huggingface.co/tngtech/DeepSeek-TNG-R1T2-Chimera).
 
 ## Features
 - Monitors game playtime and sends gentle reminders to users to take breaks.
