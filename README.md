@@ -1,6 +1,6 @@
 # Negev
 
-Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by [Deepseek R1T2 Chimera](https://huggingface.co/tngtech/DeepSeek-TNG-R1T2-Chimera).
+Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by [Arcee AI - Trinity Large](https://huggingface.co/arcee-ai/Trinity-Large-Preview).
 
 ## Features
 - Monitors game playtime and sends gentle reminders to users to take breaks.
@@ -46,3 +46,11 @@ Ensure the bot has the following permissions:
 - Read message history
 - Use slash sommands
 - The account for the spotify developer application is added as a collaborator in the target playlist 
+
+
+### Conversational AI API history
+| Model(in-order) | Status | Reason for removal |
+| [Google Gemini](https://aistudio.google.com/) | Retired | Strict token limits |
+| [Cohere](https://dashboard.cohere.com/) | Retired | Inability to understand context |
+| [Deepseek R1T2 Chimera](https://huggingface.co/tngtech/DeepSeek-TNG-R1T2-Chimera) | Retired | API Endpoint removed |
+| [Arcee AI: Trinity Large](https://huggingface.co/arcee-ai/Trinity-Large-Preview) | In service | --- |

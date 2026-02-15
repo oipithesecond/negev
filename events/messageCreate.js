@@ -50,7 +50,7 @@ module.exports = {
                         "X-Title": "Negev Vibe"
                     },
                     body: JSON.stringify({
-                        model: "tngtech/deepseek-r1t2-chimera:free",
+                        model: "arcee-ai/trinity-large-preview:free",
                         messages: [
                             {
                                 role: "system",
@@ -70,12 +70,12 @@ module.exports = {
 
                 if (data.error) {
                     console.error("OpenRouter Error:", data.error);
-                    return message.reply("My brain is fried (API Error). Try again later.");
+                    return message.reply("My brain is fried. Try again later.");
                 }
 
                 replyText = data.choices[0].message.content;
 
-                // Cleanup DeepSeek thought tags
+                // Cleanup thought tags
                 replyText = replyText.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 
                 if (!replyText) replyText = "...";
