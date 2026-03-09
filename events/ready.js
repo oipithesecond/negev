@@ -5,5 +5,6 @@ module.exports = {
     once: true,
     execute(client) {
         console.log(`${client.user.tag} is online!`);
+        console.log(`Tracking in ${client.guilds.cache.size} guilds`);
     },
 };
