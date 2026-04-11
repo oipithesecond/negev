@@ -149,11 +149,25 @@ module.exports = {
                     const trackUri = `spotify:track:${trackId}`;
                     console.log(`Attempting to add track: ${trackUri} to playlist: ${playlistId}`);
                     
-                    const result = await spotifyApi.addTracksToPlaylist(
-                        playlistId, 
-                        [trackUri]
-                    );
+                    const accessToken = spotifyApi.getAccessToken();
+
+                    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/items`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            uris: [trackUri]
+                        })
+                    });
                     
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Spotify API Error: ${response.status} - ${errorData.error?.message || 'Forbidden'}`);
+                    }
+                    
+                    const result = { body: await response.json() };
                     console.log('Spotify API response:', result.body);
                     
                     const randomGif = celebrationGifs[Math.floor(Math.random() * celebrationGifs.length)];
