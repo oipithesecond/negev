@@ -73,7 +73,7 @@ module.exports = {
                     return message.reply("My brain is fried. Try again later.");
                 }
 
-                replyText = data.choices[0].message.content;
+                replyText = data.choices[0].message.content || "";
 
                 // Cleanup thought tags
                 replyText = replyText.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
