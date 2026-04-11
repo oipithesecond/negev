@@ -50,7 +50,7 @@ module.exports = {
                         "X-Title": "Negev Vibe"
                     },
                     body: JSON.stringify({
-                        model: "arcee-ai/trinity-large-preview:free",
+                        model: "minimax/minimax-m2.5:free",
                         messages: [
                             {
                                 role: "system",

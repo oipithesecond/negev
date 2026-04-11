@@ -54,4 +54,5 @@ Ensure the bot has the following permissions:
 | [Google Gemini](https://aistudio.google.com/) | Retired | Strict token limits |
 | [Cohere](https://dashboard.cohere.com/) | Retired | Inability to understand context |
 | [Deepseek R1T2 Chimera](https://huggingface.co/tngtech/DeepSeek-TNG-R1T2-Chimera) | Retired | API Endpoint removed |
-| [Arcee AI: Trinity Large](https://huggingface.co/arcee-ai/Trinity-Large-Preview) | **In service** | — |
+| [Arcee AI: Trinity Large](https://huggingface.co/arcee-ai/Trinity-Large-Preview) | Retired | API Endpoint removed |
+| [MiniMax M2.5](https://ollama.com/library/minimax-m2.5:cloud) | **In-service** | - |
