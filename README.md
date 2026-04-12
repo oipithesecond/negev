@@ -1,6 +1,6 @@
 # Negev
 
-Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by [Arcee AI - Trinity Large](https://huggingface.co/arcee-ai/Trinity-Large-Preview).
+Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by [MiniMax M2.5](https://ollama.com/library/minimax-m2.5:cloud).
 
 ## Features
 - Monitors game playtime and sends gentle reminders to users to take breaks.
