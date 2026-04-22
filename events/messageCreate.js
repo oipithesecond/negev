@@ -99,9 +99,9 @@ module.exports = {
 
         if (message.mentions.has(message.client.user)) {
             if (month == process.env.BMONTH_A && day == process.env.BDAY_A) {
-                return message.channel.send(process.env.BDAYmedia_A);
+                return message.channel.send(process.env.BDAYmedia);
             } else if (month == process.env.BMONTH_O && day == process.env.BDAY_O) {
-                return message.channel.send(process.env.BDAYmedia_O);
+                return message.channel.send(process.env.BDAYmedia);
             } 
         }
 
