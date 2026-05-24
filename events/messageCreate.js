@@ -50,7 +50,7 @@ module.exports = {
                         "X-Title": "Negev Vibe"
                     },
                     body: JSON.stringify({
-                        model: "minimax/minimax-m2.5:free",
+                        model: "openai/gpt-oss-120b:free",
                         messages: [
                             {
                                 role: "system",

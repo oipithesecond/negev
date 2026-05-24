@@ -1,6 +1,6 @@
 # Negev
 
-Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by [MiniMax M2.5](https://ollama.com/library/minimax-m2.5:cloud).
+Negev is a multi-purpose Discord bot designed to enhance server engagement through game activity tracking(via Rich Presence), a collaborative Spotify playlist feature, and a vibe-aware AI chatbot powered by powerful text generation [models](#conversational-ai-api-history).
 
 ## Features
 - Monitors game playtime and sends gentle reminders to users to take breaks.
@@ -55,4 +55,5 @@ Ensure the bot has the following permissions:
 | [Cohere](https://dashboard.cohere.com/) | Retired | Inability to understand context |
 | [Deepseek R1T2 Chimera](https://huggingface.co/tngtech/DeepSeek-TNG-R1T2-Chimera) | Retired | API Endpoint removed |
 | [Arcee AI: Trinity Large](https://huggingface.co/arcee-ai/Trinity-Large-Preview) | Retired | API Endpoint removed |
-| [MiniMax M2.5](https://ollama.com/library/minimax-m2.5:cloud) | **In-service** | - |
+| [MiniMax M2.5](https://ollama.com/library/minimax-m2.5:cloud) | Retired | Slow Inference |
+| [OpenAI: gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b) | **In-service** | - |
