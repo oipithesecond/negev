@@ -1,6 +1,4 @@
 const { Events, Collection } = require('discord.js');
-const axios = require('axios');
-
 module.exports = {
     name: Events.MessageCreate,
     async execute(message) {
@@ -125,8 +123,9 @@ module.exports = {
             try{
                 // fetch 30 results
                 const url = `https://api.klipy.com/api/v1/${process.env.KLIPY_API_KEY}/gifs/search?q=${encodeURIComponent(SEARCH_KEYWORD)}&per_page=30`;
-                const response = await axios.get(url);
-                const results = response.data?.data?.data || [];
+                const response = await fetch(url);
+                const data = await response.json();
+                const results = data?.data?.data || [];
 
                 if (results && results.length > 0) {
                     // Pick a random index from the available results
