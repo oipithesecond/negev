@@ -54,6 +54,9 @@ for (const file of eventFiles) {
 }
 
 setInterval(async () => {
+    // [TEMPORARILY DISABLED] Feature 1: Game activity alert loop
+    return;
+
     const userActivityMap = client.userActivityMap;
     if (!userActivityMap || userActivityMap.size === 0) return; 
 

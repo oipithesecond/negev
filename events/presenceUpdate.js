@@ -3,6 +3,9 @@ const { Events, ActivityType } = require('discord.js');
 module.exports = {
     name: Events.PresenceUpdate,
     async execute(oldPresence, newPresence) {
+        // [TEMPORARILY DISABLED] Feature 1: Game activity tracking
+        return;
+
         const user = newPresence.user;
         if (user.bot) return;
 
