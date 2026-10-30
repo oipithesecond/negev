@@ -56,4 +56,5 @@ Ensure the bot has the following permissions:
 | [Deepseek R1T2 Chimera](https://huggingface.co/tngtech/DeepSeek-TNG-R1T2-Chimera) | Retired | API Endpoint removed |
 | [Arcee AI: Trinity Large](https://huggingface.co/arcee-ai/Trinity-Large-Preview) | Retired | API Endpoint removed |
 | [MiniMax M2.5](https://ollama.com/library/minimax-m2.5:cloud) | Retired | Slow Inference |
-| [OpenAI: gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b) | **In-service** | - |
+| [OpenAI: gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b) | Retired | API Endpoint Removed |
+| [NVIDIA: Nemotron 3.5 Lightning](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16) | **In-service** | - |

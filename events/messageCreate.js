@@ -49,7 +49,7 @@ module.exports = {
                         "X-Title": "Negev Vibe"
                     },
                     body: JSON.stringify({
-                        model: "openai/gpt-oss-120b:free",
+                        model: "nvidia/nemotron-3.5-lightning:free",
                         messages: [
                             {
                                 role: "system",
@@ -61,7 +61,10 @@ module.exports = {
                             }
                         ],
                         temperature: 0.7,
-                        max_tokens: 300
+                        max_tokens: 500,
+                        reasoning: {
+                            effort: "none"
+                        }
                     })
                 });
 
@@ -72,10 +75,10 @@ module.exports = {
                     return message.reply("My brain is fried. Try again later.");
                 }
 
-                replyText = data.choices[0].message.content || "";
+                replyText = data.choices?.[0]?.message?.content || "";
 
                 // Cleanup thought tags
-                replyText = replyText.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+                replyText = replyText.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, "").trim();
 
                 if (!replyText) replyText = "...";
 
