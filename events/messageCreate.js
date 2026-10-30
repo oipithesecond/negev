@@ -1,4 +1,5 @@
 const { Events, Collection } = require('discord.js');
+const axios = require('axios');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -114,6 +115,33 @@ module.exports = {
         }
         if (message.content.toLowerCase().includes("what do we live for")) {
             message.channel.send(process.env.HYPE_MOMENTS);
+        }
+
+        const TRIGGER = 'true'; 
+        const SEARCH_KEYWORD = 'morgan freeman true';
+        
+        if (message.content.toLowerCase().trim() === TRIGGER) {
+
+            try{
+                // fetch 30 results
+                const url = `https://api.klipy.com/api/v1/${process.env.KLIPY_API_KEY}/gifs/search?q=${encodeURIComponent(SEARCH_KEYWORD)}&per_page=30`;
+                const response = await axios.get(url);
+                const results = response.data?.data?.data || [];
+
+                if (results && results.length > 0) {
+                    // Pick a random index from the available results
+                    const randomIndex = Math.floor(Math.random() * results.length);
+                    const selected = results[randomIndex];
+                    const gifUrl = selected.file?.hd?.gif?.url || selected.file?.md?.gif?.url || selected.file?.sm?.gif?.url; 
+                    
+                    message.channel.send(gifUrl);
+                } else {
+                    // Fallback if KLIPY has zero results for that exact phrase
+                    console.log('No GIFs found for the fixed keyword.');
+                }
+            }catch(error){
+                console.error('Error fetching GIF from KLIPY:', error);
+            }
         }
     }
 };
