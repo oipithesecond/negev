@@ -109,7 +109,7 @@ module.exports = {
             return message.channel.send("Hi there! Use `/alerts-channel` to set up the bot.");
         }
 
-        if (message.content.toLowerCase().includes("yomtun")) {
+        if (message.content.toLowerCase().trim() === "yomtun") {
             message.channel.send(process.env.YOMTUN);
         }
         if (message.content.toLowerCase().includes("what do we live for")) {
